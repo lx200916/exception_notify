@@ -4,13 +4,13 @@ import time
 import traceback
 
 from . import notifier
-from .config import Config, load_config
+from .config import Config as __Config, load_config as __load_config
 
 # I don't think two Instance of ExceptionNotify may appear in one process.So global variable is ok.
 infos = {}
 _hook = sys.excepthook
 
-def is_notebook() -> bool:
+def __is_notebook() -> bool:
     try:
         import IPython
 
@@ -32,7 +32,7 @@ def update_info(info: dict = None):
         # print(f"ExceptionNotify: Updated info: {infos}")
 
 
-def except_hook(exc_type, value, tb):
+def __except_hook(exc_type, value, tb):
     if issubclass(exc_type, KeyboardInterrupt):
         sys.__excepthook__(exc_type, value, tb)
         return
@@ -90,23 +90,23 @@ def install(
     conf=None,
     config_path="~/.exception_notify.toml",
 ):
-    if is_notebook():
+    if __is_notebook():
         print("ExceptionNotify is not supported in Jupyter Notebook.")
     if conf is not None:
-        Config.update(conf)
-    load_config(config_path)
-    if Config["Enabled"]:
+        __Config.update(conf)
+    __load_config(config_path)
+    if __Config["Enabled"]:
         _hook = sys.excepthook
         # sys.excepthook
-        sys.excepthook = except_hook
+        sys.excepthook = __except_hook
         print("ExceptionNotify installed.")
 
 
 def Done():
-    successfully_done()
+    __successfully_done()
 
 
-def successfully_done():
+def __successfully_done():
     args = sys.argv
     message = f"✅ {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ExceptionNotify: {args[0]} Done."
     message += f"\n⌨️ Command: {' '.join(args)}"
@@ -114,4 +114,7 @@ def successfully_done():
         message += "\n🍣 Infos:"
         for key, val in infos.items():
             message += f"{key}: {val},"
+    notifier.notify(message)
+
+def notify(message):
     notifier.notify(message)

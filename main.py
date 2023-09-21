@@ -14,8 +14,9 @@ def print_hi(name):
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    ExceptionNotify.update_info({"test": "test"})
+    ExceptionNotify.update_info({"Arg1": "V1"})
     print_hi('PyCharm')
     ExceptionNotify.Done()
+
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/
