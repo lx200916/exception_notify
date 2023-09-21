@@ -96,6 +96,7 @@ def install(
         Config.update(conf)
     load_config(config_path)
     if Config["Enabled"]:
+        _hook = sys.excepthook
         # sys.excepthook
         sys.excepthook = except_hook
         print("ExceptionNotify installed.")
