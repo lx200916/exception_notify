@@ -19,7 +19,7 @@ def load_config(path="~/.exception_notify.toml"):
 
 
 def validate_config():
-    print(Config)
+    # print(Config)
     if "feishu" not in Config or "webhook" not in Config["feishu"]:
         print("Feishu Webhook not found.ExceptionNotify will not function.")
         return False
