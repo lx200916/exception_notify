@@ -18,21 +18,30 @@ pip install -e .
 * Feishu(Lark)
 ## Usage
 1. Provide Config.
+    Two ways:
    * Store Config in `~/.exception_notify.toml`.
-   * Pass the config dict in `install` function.
-     Config Example:
-   ```toml
-   [feishu]
-   webhook = "https://open.feishu.cn/open-apis/bot/v2/hook/xxx"
-   pre_str = "Notify ⚠️"
-   at = ["MY_FEISHU_OPEN_ID"]
-   ```
+     
+> Config Example:
+> ```toml
+>   [feishu]
+>   webhook = "https://open.feishu.cn/open-apis/bot/v2/hook/xxx"
+>   # pre_str = "Notify ⚠️" # Optional
+>   # at = ["MY_FEISHU_OPEN_ID"] # Optional
+>   ```
+   
+   * Or Pass the config dict in `install` function.
+   
+  
 2. Import the Lib in the Script then `install()`.
 3. (Optional) Setup Done Notify.
-   ```python
+
+### Quick Start
+Code Example: 
+```python
    import ExceptionNotify
-   ExceptionNotify.install(conf={"feishu":{"webhook":"xxx"}})
+
+   ExceptionNotify.install()
    do_awsome_things()
+   # Notify When Done
    ExceptionNotify.Done()
-   
    ```
