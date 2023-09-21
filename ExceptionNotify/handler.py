@@ -2,6 +2,7 @@ import datetime
 import sys
 import time
 import traceback
+import atexit
 
 from . import notifier
 from .config import Config as __Config, load_config as __load_config
@@ -89,6 +90,7 @@ def __except_hook(exc_type, value, tb):
 def install(
     conf=None,
     config_path="~/.exception_notify.toml",
+    register_done_handler=False,
 ):
     if __is_notebook():
         print("ExceptionNotify is not supported in Jupyter Notebook.")
@@ -99,7 +101,10 @@ def install(
         _hook = sys.excepthook
         # sys.excepthook
         sys.excepthook = __except_hook
+        if register_done_handler:
+            atexit.register(__successfully_done)
         print("ExceptionNotify installed.")
+
 
 
 def Done():
