@@ -18,6 +18,7 @@ pip install -e .
 * Feishu(Lark)
 ## Usage
 1. Provide Config.
+
     Two ways:
    * Store Config in `~/.exception_notify.toml`.
      
@@ -36,6 +37,8 @@ pip install -e .
 3. (Optional) Add Additional Info to the Notification Message Body.
     * Call `ExceptionNotify.add_info({"key":"value"})` to add additional info.(for example: `Model Best Acc.`, `HyperParameter`).
 4. (Optional) Setup Done Notify.
+5. 
+Two Ways:
  * Call `Done()` Manually when the script is done.
  * Pass `register_done_handler=True` in `install()` function, then you will get notified when the script is done.
 5. (Optional) Manually Send Any Text Message. Call `ExceptionNotify.send_message("Message")` to send message.
