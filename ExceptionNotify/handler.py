@@ -10,7 +10,7 @@ from .config import Config as __Config, load_config as __load_config
 # I don't think two Instance of ExceptionNotify may appear in one process.So global variable is ok.
 infos = {}
 _hook = sys.excepthook
-
+_exception=False
 def __is_notebook() -> bool:
     try:
         import IPython
@@ -34,6 +34,8 @@ def update_info(info: dict = None):
 
 
 def __except_hook(exc_type, value, tb):
+    global _exception
+    _exception=True
     if issubclass(exc_type, KeyboardInterrupt):
         sys.__excepthook__(exc_type, value, tb)
         return
@@ -102,10 +104,13 @@ def install(
         # sys.excepthook
         sys.excepthook = __except_hook
         if register_done_handler:
-            atexit.register(__successfully_done)
+            atexit.register(__exit_hook)
         print("ExceptionNotify installed.")
 
 
+def __exit_hook():
+    if not _exception:
+        __successfully_done()
 
 def Done():
     __successfully_done()
