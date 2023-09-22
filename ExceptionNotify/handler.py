@@ -62,8 +62,8 @@ def __except_hook(exc_type, value, tb):
     stack.reverse()
     message += "\n\nLocalvars:"
     for frame in stack:
-        if len(message) > 120:
-            break
+        # if len(message) > 120:
+        #     break
         if (
             frame.f_code.co_name == "<module>"
             or frame.f_code.co_name == "__exceptionhook__"
@@ -76,6 +76,8 @@ def __except_hook(exc_type, value, tb):
         )
         for key, val in frame.f_locals.items():
             message += "\n\t%20s = " % key
+            if key.startswith("__"):
+                continue
             try:
                 val = str(val)
                 if len(val) > 20:
