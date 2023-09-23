@@ -1,7 +1,7 @@
 from .feishu import Feishu
+from .telegram import Telegram
 
-notifiers = []
-notifiers.append(Feishu)
+notifiers = [Feishu, Telegram]
 
 
 def notify(message):

@@ -2,7 +2,7 @@ import requests
 from ..config import Config
 
 class Feishu:
-    def notify(message):
+    def notify(self,message:str, meta: dict = None):
         if not Config["Enabled"]:
             return
         if "feishu" not in Config or "webhook" not in Config["feishu"]:
