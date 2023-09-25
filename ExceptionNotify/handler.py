@@ -65,8 +65,9 @@ def __except_hook(exc_type, value, tb):
         # if len(message) > 120:
         #     break
         if (
-            frame.f_code.co_name == "<module>"
-            or frame.f_code.co_name == "__exceptionhook__"
+            # frame.f_code.co_name == "<module>"
+            # or
+            frame.f_code.co_name == "__exceptionhook__"
         ):
             continue
         message += "\nFrame %s in `%s` at `line %s`" % (
@@ -75,9 +76,9 @@ def __except_hook(exc_type, value, tb):
             frame.f_lineno,
         )
         for key, val in frame.f_locals.items():
-            message += "\n\t%20s = " % key
-            if key.startswith("__"):
+            if key.startswith("__") or str(val).startswith("<module") or str(val).startswith("<function"):
                 continue
+            message += "\n\t%20s = " % key
             try:
                 val = str(val)
                 if len(val) > 20:
