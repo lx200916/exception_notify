@@ -1,4 +1,7 @@
 import datetime
+import re
+import signal
+import subprocess
 import sys
 import time
 import traceback
@@ -11,6 +14,7 @@ from .config import Config as __Config, load_config as __load_config
 infos = {}
 _hook = sys.excepthook
 _exception=False
+__w_re = re.compile(r"^(\S+)\s+(\S+)\s+(\S+)")
 def __is_notebook() -> bool:
     try:
         import IPython
@@ -96,6 +100,7 @@ def install(
     conf=None,
     config_path="~/.exception_notify.toml",
     register_done_handler=False,
+    register_kill_handler=False,
 ):
     if __is_notebook():
         print("ExceptionNotify is not supported in Jupyter Notebook.")
@@ -108,7 +113,38 @@ def install(
         sys.excepthook = __except_hook
         if register_done_handler:
             atexit.register(__exit_hook)
+        if register_kill_handler:
+            import signal
+
+            signal.signal(signal.SIGTERM, __kill_handler)
+            # signal.signal(signal.SIGINT, __kill_handler)
         print("ExceptionNotify installed.")
+
+def __kill_handler(signum, frame):
+    global _exception
+    _exception=True
+    if signum == signal.SIGTERM:
+        print("SIGTERM received.")
+        message = f"🛑 {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ExceptionNotify: SIGTERM received.\n"
+        message += f"⌨️ Command: {' '.join(sys.argv)}"
+        output = subprocess.getoutput("w|grep -v `whoami`")
+        # Parse output and extract USER TTY FROM
+        if len(output) > 0:
+            lines = output.split("\n")
+            message += "\n👥 Users:"
+            for line in lines:
+                if line.startswith("USER") or "load average" in line:
+                    continue
+                m = __w_re.match(line)
+                if m:
+                    message += f"\n{m.group(1)} {m.group(2)} {m.group(3)}"
+        if len(infos) > 0:
+            message += "\n🍣 Infos:"
+            for key, val in infos.items():
+                message += f"{key}: {val},"
+        notifier.notify(message)
+        sys.exit(-1)
+
 
 
 def __exit_hook():
