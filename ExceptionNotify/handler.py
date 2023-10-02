@@ -1,4 +1,5 @@
 import datetime
+import os
 import re
 import signal
 import subprocess
@@ -55,6 +56,20 @@ def __except_hook(exc_type, value, tb):
             [f"{key}: {val}" for key, val in infos.items()]
         )
     notifier.notify(message)
+    def suicide():
+        print("ExceptionNotify: Suicide in 3 seconds.")
+        time.sleep(3)
+        _hook(exc_type, value, tb)
+        time.sleep(3)
+        # print("ExceptionNotify: Suicide.")
+        os.kill(os.getpid(), signal.SIGINT)
+        os.kill(os.getpid(), signal.SIGINT)
+        os.kill(os.getpid(), signal.SIGINT)
+        os.kill(os.getpid(), signal.SIGINT)
+        time.sleep(3)
+        os.kill(os.getpid(), signal.SIGTERM)
+    import threading
+    threading.Thread(target=suicide,daemon=True).start()
     while 1:
         if not tb.tb_next:
             break
@@ -67,11 +82,7 @@ def __except_hook(exc_type, value, tb):
     stack.reverse()
     message += "\n\nLocalvars:"
     for frame in stack:
-        # if len(message) > 120:
-        #     break
         if (
-            # frame.f_code.co_name == "<module>"
-            # or
             frame.f_code.co_name == "__exceptionhook__"
         ):
             continue
