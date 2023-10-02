@@ -80,7 +80,7 @@ def __except_hook(exc_type, value, tb):
             frame.f_lineno,
         )
         for key, val in frame.f_locals.items():
-            if key.startswith("__") or str(val).startswith("<module") or str(val).startswith("<function"):
+            if key.startswith("__") or str(val).startswith("<module") or str(val).startswith("<function") or str(val).startswith("<class"):
                 continue
             message += "\n\t%20s = " % key
             try:
