@@ -15,6 +15,7 @@ infos = {}
 _hook = sys.excepthook
 _exception=False
 __w_re = re.compile(r"^(\S+)\s+(\S+)\s+(\S+)")
+__re_raise=False
 def __is_notebook() -> bool:
     try:
         import IPython
@@ -92,7 +93,10 @@ def __except_hook(exc_type, value, tb):
                 message += "<ERROR WHILE PRINTING VALUE>"
     time.sleep(0.1)
     notifier.notify(message)
-    _hook(exc_type, value, tb)
+    if __re_raise:
+        raise exc_type(value).with_traceback(tb)
+    else:
+        _hook(exc_type, value, tb)
 
 
 
@@ -101,7 +105,10 @@ def install(
     config_path="~/.exception_notify.toml",
     register_done_handler=False,
     register_kill_handler=False,
+        re_raise=False
 ):
+    global __re_raise
+    __re_raise=re_raise
     if __is_notebook():
         print("ExceptionNotify is not supported in Jupyter Notebook.")
     if conf is not None:
