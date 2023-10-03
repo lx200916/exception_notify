@@ -69,12 +69,11 @@ def __to_str(obj):
                     else:
                         return str(obj)
             except:
-                print(type(obj))
+                # print(type(obj))
                 return "<ERROR WHILE PRINTING Numpy VALUE>"
         return str(obj)
     except:
-        print(type(obj))
-
+        # print(type(obj))
         return "<ERROR WHILE PRINTING VALUE>"
 
 
