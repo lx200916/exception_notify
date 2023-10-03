@@ -1,3 +1,4 @@
+import atexit
 import datetime
 import os
 import re
@@ -6,7 +7,6 @@ import subprocess
 import sys
 import time
 import traceback
-import atexit
 
 from . import notifier
 from .config import Config as __Config, load_config as __load_config
@@ -14,9 +14,10 @@ from .config import Config as __Config, load_config as __load_config
 # I don't think two Instance of ExceptionNotify may appear in one process.So global variable is ok.
 infos = {}
 _hook = sys.excepthook
-_exception=False
+_exception = False
 __w_re = re.compile(r"^(\S+)\s+(\S+)\s+(\S+)")
-__re_raise=False
+__re_raise = False
+
 def __is_notebook() -> bool:
     try:
         import IPython
@@ -30,6 +31,51 @@ def __is_notebook() -> bool:
             return False  # Other type (?)
     except Exception as e:
         return False  # Probably standard Python interpreter
+
+
+def __filter_locals(key,val,max_len=50)->tuple[bool,str]:
+    if key.startswith("__") or __to_str(val).startswith("<module") or __to_str(val).startswith("<function") or __to_str(val).startswith("<class"):
+        return False,""
+    return True, f"{__to_str(key)}: {__to_str(val)[:max_len]}"
+
+
+def __to_str(obj):
+    try:
+        if type(obj) == list:
+            if len(obj) > 5:
+                return f"<list len:{len(obj)}>"
+            else:
+                return "<list " + ", ".join([__to_str(i) for i in obj]) + ">"
+        if type(obj) == dict:
+            if len(obj) > 5:
+                return f"<dict len:{len(obj)}>"
+            else:
+                return "<dict " + ", \n".join(
+                    [f"{__to_str(key)}: {__to_str(val)}" for key, val in obj.items()]
+                ) + ">"
+        if type(obj).__module__ == "builtins":
+            return str(obj)
+        if type(obj).__module__ == "numpy":
+            try:
+                import numpy
+                if isinstance(obj, numpy.ndarray):
+                    if obj.ndim >5 or obj.size >= 20:
+                        return f"<ndarray {obj.shape} {obj.dtype}>"
+                    else:
+                        return str(obj)
+                else:
+                    if len(obj) > 30:
+                        return f"<{type(obj).__name__} len:{len(obj)}>"
+                    else:
+                        return str(obj)
+            except:
+                print(type(obj))
+                return "<ERROR WHILE PRINTING Numpy VALUE>"
+        return str(obj)
+    except:
+        print(type(obj))
+
+        return "<ERROR WHILE PRINTING VALUE>"
 
 
 def update_info(info: dict = None):
@@ -56,6 +102,7 @@ def __except_hook(exc_type, value, tb):
             [f"{key}: {val}" for key, val in infos.items()]
         )
     notifier.notify(message)
+
     def suicide():
         print("ExceptionNotify: Suicide in 3 seconds.")
         time.sleep(3)
@@ -92,23 +139,15 @@ def __except_hook(exc_type, value, tb):
             frame.f_lineno,
         )
         for key, val in frame.f_locals.items():
-            if key.startswith("__") or str(val).startswith("<module") or str(val).startswith("<function") or str(val).startswith("<class"):
-                continue
-            message += "\n\t%20s = " % key
-            try:
-                val = str(val)
-                if len(val) > 20:
-                    val = val[:20] + "..."
-                message += val
-            except:
-                message += "<ERROR WHILE PRINTING VALUE>"
+            should_add , val = __filter_locals(key,val)
+            if should_add:
+                message += f"\n\t{val}"
     time.sleep(0.1)
     notifier.notify(message)
     if __re_raise:
         raise exc_type(value).with_traceback(tb)
     else:
         _hook(exc_type, value, tb)
-
 
 
 def install(
@@ -118,6 +157,7 @@ def install(
     register_kill_handler=False,
         re_raise=False
 ):
+    global _hook
     global __re_raise
     __re_raise=re_raise
     if __is_notebook():
@@ -127,7 +167,6 @@ def install(
     __load_config(config_path)
     if __Config["Enabled"]:
         _hook = sys.excepthook
-        # sys.excepthook
         sys.excepthook = __except_hook
         if register_done_handler:
             atexit.register(__exit_hook)
@@ -138,8 +177,11 @@ def install(
             # signal.signal(signal.SIGINT, __kill_handler)
         print("ExceptionNotify installed.")
 
+
 def __kill_handler(signum, frame):
     global _exception
+    if _exception:
+        return
     _exception=True
     if signum == signal.SIGTERM:
         print("SIGTERM received.")
@@ -164,10 +206,10 @@ def __kill_handler(signum, frame):
         sys.exit(-1)
 
 
-
 def __exit_hook():
     if not _exception:
         __successfully_done()
+
 
 def Done():
     __successfully_done()
@@ -182,6 +224,7 @@ def __successfully_done():
         for key, val in infos.items():
             message += f"{key}: {val},"
     notifier.notify(message)
+
 
 def notify(message):
     notifier.notify(message)
