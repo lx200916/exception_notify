@@ -41,19 +41,19 @@ def __filter_locals(key,val,max_len=50)->tuple[bool,str]:
 
 def __to_str(obj):
     try:
-        if type(obj) == list:
-            if len(obj) > 5:
-                return f"<list len:{len(obj)}>"
-            else:
-                return "<list " + ", ".join([__to_str(i) for i in obj]) + ">"
-        if type(obj) == dict:
-            if len(obj) > 5:
-                return f"<dict len:{len(obj)}>"
-            else:
-                return "<dict " + ", \n".join(
-                    [f"{__to_str(key)}: {__to_str(val)}" for key, val in obj.items()]
-                ) + ">"
         if type(obj).__module__ == "builtins":
+            if type(obj) == list:
+                if len(obj) > 5:
+                    return f"<list len:{len(obj)}>"
+                else:
+                    return "<list " + ", ".join([__to_str(i) for i in obj]) + ">"
+            if type(obj) == dict:
+                if len(obj) > 5:
+                    return f"<dict len:{len(obj)}>"
+                else:
+                    return "<dict " + ", \n".join(
+                        [f"{__to_str(key)}: {__to_str(val)}" for key, val in obj.items()]
+                    ) + ">"
             return str(obj)
         if type(obj).__module__ == "numpy":
             try:
