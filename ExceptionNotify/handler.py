@@ -43,17 +43,22 @@ def __to_str(obj):
     try:
         if type(obj).__module__ == "builtins":
             if type(obj) == list:
-                if len(obj) > 5:
+                if len(obj) >= 5:
                     return f"<list len:{len(obj)}>"
                 else:
                     return "<list " + ", ".join([__to_str(i) for i in obj]) + ">"
             if type(obj) == dict:
-                if len(obj) > 5:
+                if len(obj) >= 5:
                     return f"<dict len:{len(obj)}>"
                 else:
                     return "<dict " + ", \n".join(
                         [f"{__to_str(key)}: {__to_str(val)}" for key, val in obj.items()]
                     ) + ">"
+            if type(obj) == tuple:
+                if len(obj) >= 5:
+                    return f"<tuple len:{len(obj)}>"
+                else:
+                    return "( " + ", ".join([__to_str(i) for i in obj]) + ")"
             return str(obj)
         if type(obj).__module__ == "numpy":
             try:
@@ -71,7 +76,40 @@ def __to_str(obj):
             except:
                 # print(type(obj))
                 return "<ERROR WHILE PRINTING Numpy VALUE>"
+        if type(obj).__module__ == "pandas.core.frame":
+            try:
+                import pandas
+                if isinstance(obj, pandas.DataFrame):
+                    if obj.ndim >5 or obj.size >= 20:
+                        return f"<DataFrame {obj.shape} {obj.dtypes}>"
+                    else:
+                        return str(obj)
+                else:
+                    if len(obj) > 30:
+                        return f"<{type(obj).__name__} len:{len(obj)}>"
+                    else:
+                        return str(obj)
+            except:
+                # print(type(obj))
+                return "<ERROR WHILE PRINTING Pandas VALUE>"
+        if type(obj).__module__ == "torch":
+            try:
+                import torch
+                if isinstance(obj, torch.Tensor):
+                    if obj.ndim >5 or obj.numel() >= 20:
+                        return f"<Tensor {obj.shape} {obj.dtype}>"
+                    else:
+                        return str(obj)
+                else:
+                    if len(obj) > 30:
+                        return f"<{type(obj).__name__} len:{len(obj)}>"
+                    else:
+                        return str(obj)
+            except:
+                # print(type(obj))
+                return "<ERROR WHILE PRINTING Torch VALUE>"
         return str(obj)
+
     except:
         # print(type(obj))
         return "<ERROR WHILE PRINTING VALUE>"
