@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 setup(
     name="exception_notify",
-    version="0.8",
+    version="0.8.1",
     author="SaltedFish",
     packages=find_packages(),
     install_requires=[
