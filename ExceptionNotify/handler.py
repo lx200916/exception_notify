@@ -39,23 +39,23 @@ def __filter_locals(key,val,max_len=50)->tuple[bool,str]:
     return True, f"{__to_str(key)}: {__to_str(val)[:max_len]}"
 
 
-def __to_str(obj):
+def __to_str(obj,limit_collection_size=5) -> str:
     try:
         if type(obj).__module__ == "builtins":
             if type(obj) == list:
-                if len(obj) >= 5:
+                if len(obj) >= limit_collection_size:
                     return f"<list len:{len(obj)}>"
                 else:
                     return "<list " + ", ".join([__to_str(i) for i in obj]) + ">"
             if type(obj) == dict:
-                if len(obj) >= 5:
+                if len(obj) >= limit_collection_size:
                     return f"<dict len:{len(obj)}>"
                 else:
                     return "<dict " + ", \n".join(
                         [f"{__to_str(key)}: {__to_str(val)}" for key, val in obj.items()]
                     ) + ">"
             if type(obj) == tuple:
-                if len(obj) >= 5:
+                if len(obj) >= limit_collection_size:
                     return f"<tuple len:{len(obj)}>"
                 else:
                     return "( " + ", ".join([__to_str(i) for i in obj]) + ")"
@@ -136,7 +136,7 @@ def __except_hook(exc_type, value, tb):
     message += f"🕐 Time: {datetime.datetime.now()}"
     if len(infos) > 0:
         message += "\n🍣 Infos:" + ", ".join(
-            [f"{key}: {val}" for key, val in infos.items()]
+            [f"{__to_str(key)}: {__to_str(val,10)}" for key, val in infos.items()]
         )
     notifier.notify(message)
 
