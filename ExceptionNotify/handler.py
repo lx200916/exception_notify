@@ -18,6 +18,7 @@ _exception = False
 __w_re = re.compile(r"^(\S+)\s+(\S+)\s+(\S+)")
 __re_raise = False
 
+
 def __is_notebook() -> bool:
     try:
         import IPython
@@ -33,13 +34,18 @@ def __is_notebook() -> bool:
         return False  # Probably standard Python interpreter
 
 
-def __filter_locals(key,val,max_len=50)->tuple[bool,str]:
-    if key.startswith("__") or __to_str(val).startswith("<module") or __to_str(val).startswith("<function") or __to_str(val).startswith("<class"):
-        return False,""
+def __filter_locals(key, val, max_len=50) -> tuple[bool, str]:
+    if (
+        key.startswith("__")
+        or __to_str(val).startswith("<module")
+        or __to_str(val).startswith("<function")
+        or __to_str(val).startswith("<class")
+    ):
+        return False, ""
     return True, f"{__to_str(key)}: {__to_str(val)[:max_len]}"
 
 
-def __to_str(obj,limit_collection_size=5) -> str:
+def __to_str(obj, limit_collection_size=5) -> str:
     try:
         if type(obj).__module__ == "builtins":
             if type(obj) == list:
@@ -51,9 +57,16 @@ def __to_str(obj,limit_collection_size=5) -> str:
                 if len(obj) >= limit_collection_size:
                     return f"<dict len:{len(obj)}>"
                 else:
-                    return "<dict " + ", \n".join(
-                        [f"{__to_str(key)}: {__to_str(val)}" for key, val in obj.items()]
-                    ) + ">"
+                    return (
+                        "<dict "
+                        + ", \n".join(
+                            [
+                                f"{__to_str(key)}: {__to_str(val)}"
+                                for key, val in obj.items()
+                            ]
+                        )
+                        + ">"
+                    )
             if type(obj) == tuple:
                 if len(obj) >= limit_collection_size:
                     return f"<tuple len:{len(obj)}>"
@@ -63,8 +76,9 @@ def __to_str(obj,limit_collection_size=5) -> str:
         if type(obj).__module__ == "numpy":
             try:
                 import numpy
+
                 if isinstance(obj, numpy.ndarray):
-                    if obj.ndim >5 or obj.size >= 20:
+                    if obj.ndim > 5 or obj.size >= 20:
                         return f"<ndarray {obj.shape} {obj.dtype}>"
                     else:
                         return str(obj)
@@ -79,8 +93,9 @@ def __to_str(obj,limit_collection_size=5) -> str:
         if type(obj).__module__ == "pandas.core.frame":
             try:
                 import pandas
+
                 if isinstance(obj, pandas.DataFrame):
-                    if obj.ndim >5 or obj.size >= 20:
+                    if obj.ndim > 5 or obj.size >= 20:
                         return f"<DataFrame {obj.shape} {obj.dtypes}>"
                     else:
                         return str(obj)
@@ -95,8 +110,9 @@ def __to_str(obj,limit_collection_size=5) -> str:
         if type(obj).__module__ == "torch":
             try:
                 import torch
+
                 if isinstance(obj, torch.Tensor):
-                    if obj.ndim >5 or obj.numel() >= 20:
+                    if obj.ndim > 5 or obj.numel() >= 20:
                         return f"<Tensor {obj.shape} {obj.dtype}>"
                     else:
                         return str(obj)
@@ -124,7 +140,7 @@ def update_info(info: dict = None):
 
 def __except_hook(exc_type, value, tb):
     global _exception
-    _exception=True
+    _exception = True
     if issubclass(exc_type, KeyboardInterrupt):
         sys.__excepthook__(exc_type, value, tb)
         return
@@ -152,8 +168,10 @@ def __except_hook(exc_type, value, tb):
         os.kill(os.getpid(), signal.SIGINT)
         time.sleep(3)
         os.kill(os.getpid(), signal.SIGTERM)
+
     import threading
-    threading.Thread(target=suicide,daemon=True).start()
+
+    threading.Thread(target=suicide, daemon=True).start()
     while 1:
         if not tb.tb_next:
             break
@@ -166,9 +184,7 @@ def __except_hook(exc_type, value, tb):
     stack.reverse()
     message += "\n\nLocalvars:"
     for frame in stack:
-        if (
-            frame.f_code.co_name == "__exceptionhook__"
-        ):
+        if frame.f_code.co_name == "__exceptionhook__":
             continue
         message += "\nFrame %s in `%s` at `line %s`" % (
             frame.f_code.co_name,
@@ -176,7 +192,7 @@ def __except_hook(exc_type, value, tb):
             frame.f_lineno,
         )
         for key, val in frame.f_locals.items():
-            should_add , val = __filter_locals(key,val)
+            should_add, val = __filter_locals(key, val)
             if should_add:
                 message += f"\n\t{val}"
     time.sleep(0.1)
@@ -192,11 +208,11 @@ def install(
     config_path="~/.exception_notify.toml",
     register_done_handler=False,
     register_kill_handler=False,
-        re_raise=False
+    re_raise=False,
 ):
     global _hook
     global __re_raise
-    __re_raise=re_raise
+    __re_raise = re_raise
     if __is_notebook():
         print("ExceptionNotify is not supported in Jupyter Notebook.")
     if conf is not None:
@@ -219,7 +235,7 @@ def __kill_handler(signum, frame):
     global _exception
     if _exception:
         return
-    _exception=True
+    _exception = True
     if signum == signal.SIGTERM:
         print("SIGTERM received.")
         message = f"🛑 {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ExceptionNotify: SIGTERM received.\n"
@@ -263,5 +279,10 @@ def __successfully_done():
     notifier.notify(message)
 
 
-def notify(message):
+def notify(message, with_infos=True):
+    if with_infos:
+        if len(infos) > 0:
+            message += "\n🍣 Infos:"
+            for key, val in infos.items():
+                message += f"{key}: {val},"
     notifier.notify(message)
